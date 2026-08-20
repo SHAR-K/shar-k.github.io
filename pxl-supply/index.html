@@ -993,26 +993,39 @@
   }, 50);
 
   // 移动端：顶部继续下拉手指 = 倒车
-  let touchStartY = null;
+  // 增量累计模型（与桌面滚轮一致）：每段下划位移都计入进度池，松手不清零、靠衰减回落，
+  // 连续几次下划可在衰减窗口内攒满——单次手势的绝对位移在小屏上永远够不到阈值
+  let lastTouchY = null, gestureWasLocked = false;
   window.addEventListener('touchstart', (e) => {
-    touchStartY = (window.scrollY <= 0 && !secretOpen) ? e.touches[0].clientY : null;
+    if (window.scrollY <= 0 && !secretOpen) {
+      lastTouchY = e.touches[0].clientY;
+      gestureWasLocked = attempts < LOCK_TRIES;
+    } else {
+      lastTouchY = null;
+    }
   }, { passive: true });
   window.addEventListener('touchmove', (e) => {
-    if (touchStartY === null || secretOpen || !armed()) return;
-    const d = e.touches[0].clientY - touchStartY;
-    if (d > 0 && window.scrollY <= 0) {
+    if (lastTouchY === null || secretOpen || !armed()) return;
+    const dy = e.touches[0].clientY - lastTouchY;
+    lastTouchY = e.touches[0].clientY;
+    if (dy > 0 && window.scrollY <= 0) {
       // 非 passive + preventDefault：压掉 iOS 橡皮筋和老版下拉刷新，
       // 位移完全交给隐藏楼层（否则页面本体跟着橡皮筋位移，楼层看起来拉不下来）
       e.preventDefault();
-      // 按视口高度换算：下拉约 65% 屏高拽满（固定像素在小屏上永远够不着）
-      pull = d * (PULL_MAX / (window.innerHeight * 0.65));
+      // 按视口高度换算：累计约 65% 屏高的下划量拽满
+      pull += dy * (PULL_MAX / (window.innerHeight * 0.65));
       lastPullAt = performance.now();
       renderPull();
     }
   }, { passive: false });
   window.addEventListener('touchend', () => {
-    touchStartY = null;
-    if (!secretOpen) { pull = 0; endGesture(); renderPull(); }
+    lastTouchY = null;
+    if (!secretOpen) {
+      endGesture();
+      // 锁定期的每次拽门结束后清零（保持「三次拽门」的独立感）；
+      // 解锁后松手保留进度，交给衰减回落，允许多段下划接力
+      if (gestureWasLocked) { pull = 0; renderPull(); }
+    }
   });
 </script>
 
