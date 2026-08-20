@@ -866,7 +866,7 @@
     if (hovered) {
       front.style.transform = 'scale(1.02)';
       front.style.filter = 'brightness(2) drop-shadow(0 0 26px rgba(237,255,0,.9))';
-      if (document.body.style.transform) document.body.style.transform = '';
+      if (hero.style.transform) hero.style.transform = '';
     } else {
       // 点火失败事件：充能越高越频繁（间隔缩短），振幅越低（被嗡震接管）
       // 每次失败都崩出几颗微弱火星——最远处也看得到它在挣扎
@@ -884,12 +884,13 @@
           sputX = 5.5 * env * Math.sin(2 * Math.PI * 5 * st);
           sputY = 2.8 * env * Math.sin(2 * Math.PI * 4 * st + 1);
           sputB = 0.5 * env * Math.abs(Math.sin(2 * Math.PI * 5 * st));
-          // 整页跟着轻微共振（首屏可见时才抖，幅度约为灯字的 1/3）
-          document.body.style.transform = (window.scrollY < window.innerHeight)
+          // 首屏跟着轻微共振（抖 .hero 而不是 body：body 的 transform 会
+          // 连带 fixed 定位的隐藏楼层一起晃，还会改变它的定位基准）
+          hero.style.transform = (window.scrollY < window.innerHeight)
             ? 'translate(' + (sputX * 0.35).toFixed(2) + 'px, ' + (sputY * 0.35).toFixed(2) + 'px)'
             : '';
-        } else if (document.body.style.transform) {
-          document.body.style.transform = '';
+        } else if (hero.style.transform) {
+          hero.style.transform = '';
         }
       }
       // 常规闪烁：随机压暗后平滑恢复
@@ -992,40 +993,46 @@
     }
   }, 50);
 
-  // 移动端：顶部继续下拉手指 = 倒车
-  // 增量累计模型（与桌面滚轮一致）：每段下划位移都计入进度池，松手不清零、靠衰减回落，
-  // 连续几次下划可在衰减窗口内攒满——单次手势的绝对位移在小屏上永远够不到阈值
-  let lastTouchY = null, gestureWasLocked = false;
+  // 移动端：不看滑动距离，看次数——顶部连续下滑 3 次解锁。
+  // 前 2 次只露一条缝弹回（拽门锁着的暗示），第 3 次开门。桌面端逻辑不受影响。
+  const SWIPE_MIN = 80;        // 一次「有效下滑」的最小指程（px），过滤误碰
+  const SWIPES_TO_OPEN = 3;
+  let lastTouchY = null, gestureDy = 0, swipes = 0;
+
   window.addEventListener('touchstart', (e) => {
     if (window.scrollY <= 0 && !secretOpen) {
       lastTouchY = e.touches[0].clientY;
-      gestureWasLocked = attempts < LOCK_TRIES;
+      gestureDy = 0;
     } else {
       lastTouchY = null;
     }
   }, { passive: true });
+
   window.addEventListener('touchmove', (e) => {
     if (lastTouchY === null || secretOpen || !armed()) return;
     const dy = e.touches[0].clientY - lastTouchY;
     lastTouchY = e.touches[0].clientY;
     if (dy > 0 && window.scrollY <= 0) {
-      // 非 passive + preventDefault：压掉 iOS 橡皮筋和老版下拉刷新，
-      // 位移完全交给隐藏楼层（否则页面本体跟着橡皮筋位移，楼层看起来拉不下来）
+      // 非 passive + preventDefault：压掉 iOS 橡皮筋和老版下拉刷新
       e.preventDefault();
-      // 按视口高度换算：累计约 65% 屏高的下划量拽满
-      pull += dy * (PULL_MAX / (window.innerHeight * 0.65));
-      lastPullAt = performance.now();
-      renderPull();
+      gestureDy += dy;
+      if (swipes >= SWIPES_TO_OPEN - 1) {
+        // 第 3 次：跟手拉出，过了有效指程直接开门
+        if (gestureDy >= SWIPE_MIN) { unlockSecret(); return; }
+        secret.style.transform = 'translateY(calc(-100% + ' + Math.min(40, gestureDy * 0.5).toFixed(1) + 'px))';
+      } else {
+        // 前 2 次：锁死，只露一条缝
+        secret.style.transform = 'translateY(calc(-100% + ' + Math.min(PEEK_MAX, gestureDy * 0.3).toFixed(1) + 'px))';
+      }
     }
   }, { passive: false });
+
   window.addEventListener('touchend', () => {
     lastTouchY = null;
-    if (!secretOpen) {
-      endGesture();
-      // 锁定期的每次拽门结束后清零（保持「三次拽门」的独立感）；
-      // 解锁后松手保留进度，交给衰减回落，允许多段下划接力
-      if (gestureWasLocked) { pull = 0; renderPull(); }
-    }
+    if (secretOpen) return;
+    if (gestureDy >= SWIPE_MIN) swipes++;
+    gestureDy = 0;
+    secret.style.transform = ''; // 弹回（回到 CSS 的 -100%）
   });
 </script>
 
