@@ -466,6 +466,8 @@
     padding: 13px 26px; cursor: pointer; transition: border-color .15s, color .15s;
   }
   .secret-close:hover { border-color: var(--yellow); color: var(--yellow); }
+  /* 彩蛋层打开时真正锁死背景滚动（iOS 上 overflow:hidden 锁不住触摸滚动） */
+  body.secret-locked { position: fixed; left: 0; right: 0; top: 0; overflow: hidden; }
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 960px) {
@@ -885,8 +887,9 @@
           sputY = 2.8 * env * Math.sin(2 * Math.PI * 4 * st + 1);
           sputB = 0.5 * env * Math.abs(Math.sin(2 * Math.PI * 5 * st));
           // 首屏跟着轻微共振（抖 .hero 而不是 body：body 的 transform 会
-          // 连带 fixed 定位的隐藏楼层一起晃，还会改变它的定位基准）
-          hero.style.transform = (window.scrollY < window.innerHeight)
+          // 连带 fixed 定位的隐藏楼层一起晃）；彩蛋交互中（露缝/拉门/已打开）静默
+          const eggBusy = secretOpen || pull > 0 || gestureDy > 0;
+          hero.style.transform = (!eggBusy && window.scrollY < window.innerHeight)
             ? 'translate(' + (sputX * 0.35).toFixed(2) + 'px, ' + (sputY * 0.35).toFixed(2) + 'px)'
             : '';
         } else if (hero.style.transform) {
@@ -930,6 +933,12 @@
   }
   let topSince = window.scrollY <= 0 ? performance.now() : 0;
 
+  // 在顶部时禁掉浏览器对「下拉」的原生处理（橡皮筋/下拉刷新会抢走手势流，
+  // 导致面板一闪一闪、中途弹回）；离开顶部立即恢复原生滚动
+  function syncTouchAction() {
+    document.body.style.touchAction =
+      (window.scrollY <= 0 && !secretOpen) ? 'pan-up pinch-zoom' : '';
+  }
   window.addEventListener('scroll', () => {
     if (window.scrollY > 0) {
       topSince = 0;
@@ -937,7 +946,9 @@
     } else if (!topSince) {
       topSince = performance.now();
     }
+    syncTouchAction();
   }, { passive: true });
+  syncTouchAction();
   function armed() { return topSince > 0 && performance.now() - topSince > ARM_DELAY; }
 
   function renderPull() {
@@ -961,14 +972,22 @@
     secret.classList.remove('closing');
     secret.classList.add('open');
     secret.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('secret-locked');
+    syncTouchAction();
   }
-  function closeSecret() {
+  let unlockPending = false;
+  function closeSecret(deferUnlock) {
     secretOpen = false;
     secret.classList.remove('open');
     secret.classList.add('closing');
     secret.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    if (deferUnlock) {
+      // 手势中途关门：滚动锁保留到手指离屏，防止剩余上滑被页面接走
+      unlockPending = true;
+    } else {
+      document.body.classList.remove('secret-locked');
+    }
+    syncTouchAction();
   }
   secretClose.addEventListener('click', closeSecret);
 
@@ -997,10 +1016,15 @@
   // 前 2 次只露一条缝弹回（拽门锁着的暗示），第 3 次开门。桌面端逻辑不受影响。
   const SWIPE_MIN = 80;        // 一次「有效下滑」的最小指程（px），过滤误碰
   const SWIPES_TO_OPEN = 3;
-  let lastTouchY = null, gestureDy = 0, swipes = 0;
+  let lastTouchY = null, gestureDy = 0, swipes = 0, panelY = null;
 
   window.addEventListener('touchstart', (e) => {
-    if (window.scrollY <= 0 && !secretOpen) {
+    if (secretOpen) {
+      panelY = e.touches[0].clientY; // 彩蛋层上准备「上滑离开」
+      lastTouchY = null;
+      return;
+    }
+    if (window.scrollY <= 0) {
       lastTouchY = e.touches[0].clientY;
       gestureDy = 0;
     } else {
@@ -1009,31 +1033,50 @@
   }, { passive: true });
 
   window.addEventListener('touchmove', (e) => {
-    if (lastTouchY === null || secretOpen || !armed()) return;
+    // 彩蛋层已打开：上滑超过 60px 关闭离开（滚动锁延迟到 touchend 解除）
+    if (secretOpen) {
+      e.preventDefault();
+      if (panelY !== null && panelY - e.touches[0].clientY > 60) {
+        closeSecret(true);
+        panelY = null;
+      }
+      return;
+    }
+    // 关门后同一手势的剩余移动：吞掉，等手指离屏
+    if (unlockPending) { e.preventDefault(); return; }
+    if (lastTouchY === null || !armed()) return;
     const dy = e.touches[0].clientY - lastTouchY;
     lastTouchY = e.touches[0].clientY;
-    if (dy > 0 && window.scrollY <= 0) {
-      // 非 passive + preventDefault：压掉 iOS 橡皮筋和老版下拉刷新
-      e.preventDefault();
-      gestureDy += dy;
-      if (swipes >= SWIPES_TO_OPEN - 1) {
-        // 第 3 次：跟手拉出，过了有效指程直接开门
-        if (gestureDy >= SWIPE_MIN) { unlockSecret(); return; }
-        secret.style.transform = 'translateY(calc(-100% + ' + Math.min(40, gestureDy * 0.5).toFixed(1) + 'px))';
-      } else {
-        // 前 2 次：锁死，只露一条缝
-        secret.style.transform = 'translateY(calc(-100% + ' + Math.min(PEEK_MAX, gestureDy * 0.3).toFixed(1) + 'px))';
-      }
+    if (window.scrollY > 0) return;
+    // 手势归我们：双保险（touch-action 已禁原生下拉，这里再兜一层）
+    if (gestureDy > 0 || dy > 0) e.preventDefault();
+    gestureDy = Math.max(0, gestureDy + dy); // 允许回撤，跟手双向平滑
+    if (swipes >= SWIPES_TO_OPEN - 1) {
+      // 第 3 次：一下拉就展开（12px 只为滤掉手指抖动）
+      if (gestureDy > 12) { unlockSecret(); gestureDy = 0; return; }
+    } else {
+      // 前 2 次：锁死，只露一条缝
+      secret.style.transform = 'translateY(calc(-100% + ' + Math.min(PEEK_MAX, gestureDy * 0.3).toFixed(1) + 'px))';
     }
   }, { passive: false });
 
-  window.addEventListener('touchend', () => {
+  function touchDone() {
     lastTouchY = null;
+    panelY = null;
+    if (unlockPending) {
+      // 关门手势结束：现在才解除滚动锁，页面稳稳留在首屏
+      unlockPending = false;
+      document.body.classList.remove('secret-locked');
+      window.scrollTo(0, 0);
+      syncTouchAction();
+    }
     if (secretOpen) return;
     if (gestureDy >= SWIPE_MIN) swipes++;
     gestureDy = 0;
     secret.style.transform = ''; // 弹回（回到 CSS 的 -100%）
-  });
+  }
+  window.addEventListener('touchend', touchDone);
+  window.addEventListener('touchcancel', touchDone); // 系统抢走手势时也要正确收尾
 </script>
 
 </body>
