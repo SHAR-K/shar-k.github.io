@@ -1004,7 +1004,8 @@
       // 非 passive + preventDefault：压掉 iOS 橡皮筋和老版下拉刷新，
       // 位移完全交给隐藏楼层（否则页面本体跟着橡皮筋位移，楼层看起来拉不下来）
       e.preventDefault();
-      pull = d * 2.5; // 需要约 600px 的整屏下拉才能拽满
+      // 按视口高度换算：下拉约 65% 屏高拽满（固定像素在小屏上永远够不着）
+      pull = d * (PULL_MAX / (window.innerHeight * 0.65));
       lastPullAt = performance.now();
       renderPull();
     }
