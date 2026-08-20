@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PXL SUPPLY® — 独游周边补给站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --panel: #121212;
+    --panel-2: #161616;
+    --line: #262626;
+    --line-2: #2A2A2A;
+    --line-3: #3A3A3A;
+    --fg: #F5F5F0;
+    --muted: #A8A8A8;
+    --dim: #5A5A5A;
+    --yellow: #EDFF00;
+    --blue: #0099FF;
+    --sans: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --pixel: 'Pixelify Sans', 'Space Grotesk', sans-serif;
+    --mono: 'IBM Plex Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow-x: hidden;
+  }
+  a { color: var(--fg); text-decoration: none; transition: color .15s; }
+  a:hover { color: var(--yellow); }
+  ::selection { background: var(--yellow); color: var(--bg); }
+
+  .wrap { max-width: 1440px; margin: 0 auto; }
+
+  /* ---------- NAV ---------- */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 48px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .logo-word {
+    font-family: var(--pixel); font-size: 22px; font-weight: 700; letter-spacing: .5px;
+  }
+  .logo-word .reg { color: var(--yellow); }
+  .nav-links { display: flex; align-items: center; gap: 36px; }
+  .nav-links a { font-size: 15px; font-weight: 500; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--yellow); color: var(--bg);
+    border: 2px solid var(--yellow);
+    font-family: var(--mono); font-size: 14px; font-weight: 500;
+    padding: 12px 24px; cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--blue); color: var(--bg); }
+  .btn:active { transform: translate(0, 0); box-shadow: none; }
+  .btn-lg { font-family: var(--sans); font-size: 17px; font-weight: 700; padding: 16px 32px; }
+  .btn-ghost {
+    background: transparent; color: var(--fg); border: 2px solid var(--fg);
+  }
+  .btn-ghost:hover { box-shadow: 4px 4px 0 var(--yellow); color: var(--fg); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 32px;
+    padding: 104px 48px 96px;
+    max-width: 1100px;
+    position: relative;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--line-3); padding: 8px 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 1.5px; color: var(--muted);
+  }
+  .hero h1 {
+    font-size: clamp(48px, 7.5vw, 96px);
+    font-weight: 700; line-height: 1.02; letter-spacing: -2px;
+    text-transform: uppercase;
+  }
+  .hero h1 .px {
+    font-family: var(--pixel); color: var(--yellow); letter-spacing: 0;
+    position: relative; display: inline-block;
+  }
+  .hero h1 .px::after {
+    content: ''; position: absolute; left: 0; bottom: 4px;
+    width: 100%; height: 6px; background: var(--blue);
+  }
+  .hero p { font-size: 20px; line-height: 1.7; color: var(--muted); max-width: 560px; }
+  .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  .hero-deco {
+    position: absolute; right: 48px; top: 120px;
+    display: grid; grid-template-columns: repeat(4, 22px); gap: 6px;
+    opacity: .9;
+  }
+  .hero-deco span { width: 22px; height: 22px; }
+
+  /* ---------- MARQUEE ---------- */
+  .marquee { background: var(--yellow); overflow: hidden; padding: 14px 0; }
+  .marquee-track {
+    display: flex; width: max-content; white-space: nowrap;
+    animation: scroll 20s linear infinite;
+  }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee-seq {
+    display: flex; align-items: center; gap: 28px; padding-right: 28px;
+    font-family: var(--pixel); font-size: 20px; color: var(--bg);
+  }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* ---------- SECTIONS ---------- */
+  section { padding: 96px 48px; }
+  section + section { border-top: 1px solid var(--line); }
+  .sec-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 44px; }
+  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: 2px; color: var(--blue); margin-bottom: 8px; }
+  .sec-title {
+    font-size: clamp(32px, 3.5vw, 48px); font-weight: 700;
+    text-transform: uppercase; letter-spacing: -1px;
+  }
+  .sec-title .px { font-family: var(--pixel); color: var(--yellow); letter-spacing: 0; }
+  .link-mono {
+    font-family: var(--mono); font-size: 14px; color: var(--muted);
+    border-bottom: 1px solid var(--line-3); padding-bottom: 4px;
+  }
+
+  /* ---------- PRODUCT GRID ---------- */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .card {
+    display: flex; flex-direction: column;
+    border: 1px solid var(--line-2); background: var(--panel);
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--yellow); border-color: var(--fg); }
+  .card-img {
+    display: flex; justify-content: center; align-items: center;
+    height: 260px; background: var(--panel-2); border-bottom: 1px solid var(--line-2);
+    overflow: hidden;
+  }
+  .card-img.blue { background: var(--blue); }
+  .card-img svg { transition: transform .2s; }
+  .card:hover .card-img svg { transform: scale(1.12); }
+  .card-body { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+  .tags { display: flex; gap: 8px; }
+  .tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+    padding: 3px 8px; border: 1px solid var(--line-3); color: var(--muted);
+  }
+  .tag.y { color: var(--yellow); border-color: var(--yellow); }
+  .tag.b { color: var(--blue); border-color: var(--blue); }
+  .tag.w { color: var(--fg); border-color: var(--fg); }
+  .card-name { font-size: 20px; font-weight: 700; }
+  .card-foot { display: flex; justify-content: space-between; align-items: center; }
+  .price { font-family: var(--mono); font-size: 16px; color: var(--yellow); }
+  .explore { font-family: var(--mono); font-size: 13px; }
+
+  /* ---------- HOW ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .step { display: flex; flex-direction: column; gap: 16px; padding-top: 20px; border-top: 2px solid var(--fg); }
+  .step.y { border-color: var(--yellow); } .step.y .num { color: var(--yellow); }
+  .step.b { border-color: var(--blue); } .step.b .num { color: var(--blue); }
+  .num { font-family: var(--pixel); font-size: 32px; }
+  .step h3 { font-size: 20px; font-weight: 700; }
+  .step p { font-size: 15px; line-height: 1.7; color: var(--muted); }
+
+  /* ---------- CTA ---------- */
+  .cta {
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+    background: var(--yellow); color: var(--bg);
+    padding: 104px 48px; text-align: center;
+  }
+  .cta h2 { font-family: var(--pixel); font-size: clamp(40px, 5.5vw, 72px); line-height: 1.1; }
+  .cta p { font-size: 18px; line-height: 1.6; max-width: 480px; }
+  .cta-form { display: flex; align-items: stretch; }
+  .cta-form input {
+    border: 2px solid var(--bg); background: var(--yellow);
+    font-family: var(--mono); font-size: 14px; color: var(--bg);
+    padding: 14px 20px; min-width: 300px; outline: none;
+  }
+  .cta-form input::placeholder { color: rgba(10,10,10,.55); }
+  .cta-form button {
+    border: 2px solid var(--bg); border-left: none;
+    background: var(--bg); color: var(--yellow);
+    font-family: var(--mono); font-size: 14px; font-weight: 500;
+    padding: 14px 28px; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .cta-form button:hover { background: var(--blue); color: var(--bg); }
+
+  /* ---------- FOOTER ---------- */
+  footer { padding: 72px 48px 40px; border-top: 1px solid var(--line); }
+  .foot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 48px; margin-bottom: 48px; flex-wrap: wrap; }
+  .foot-brand .big { font-family: var(--pixel); font-size: 48px; }
+  .foot-brand .big .reg { color: var(--yellow); }
+  .foot-brand .slogan { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .foot-cols { display: flex; gap: 72px; flex-wrap: wrap; }
+  .foot-col { display: flex; flex-direction: column; gap: 12px; }
+  .foot-col .h { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--blue); margin-bottom: 4px; }
+  .foot-col a { font-size: 14px; color: var(--muted); }
+  .foot-bottom {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    border-top: 1px solid var(--line); padding-top: 24px;
+    font-family: var(--mono); font-size: 12px; color: var(--dim);
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 960px) {
+    .nav-links a:not(.btn) { display: none; }
+    .nav-inner, section, footer, .cta { padding-left: 24px; padding-right: 24px; }
+    .hero { padding: 72px 24px 64px; }
+    .grid-3, .steps { grid-template-columns: 1fr; }
+    .hero-deco { display: none; }
+    .sec-head { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .cta-form { flex-direction: column; width: 100%; }
+    .cta-form input { min-width: 0; width: 100%; }
+    .cta-form button { border-left: 2px solid var(--bg); border-top: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="6" height="6" fill="#EDFF00"/><rect x="9" y="9" width="6" height="6" fill="#EDFF00"/><rect x="15" y="3" width="6" height="6" fill="#0099FF"/><rect x="3" y="15" width="6" height="6" fill="#F5F5F0"/><rect x="15" y="15" width="6" height="6" fill="#EDFF00"/></svg>
+      <div class="logo-word">PXL SUPPLY<span class="reg">&reg;</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="#drops">周边</a>
+      <a href="#drops">键帽</a>
+      <a href="#how">合作独游</a>
+      <a href="#how">关于</a>
+      <a href="#drops" class="btn">SHOP
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="6" width="8" height="2" fill="currentColor"/><rect x="7" y="2" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><rect x="11" y="6" width="2" height="2" fill="currentColor"/><rect x="9" y="8" width="2" height="2" fill="currentColor"/><rect x="7" y="10" width="2" height="2" fill="currentColor"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap hero">
+  <div class="chip">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" width="4" height="4" fill="#0099FF"/><rect y="4" width="4" height="4" fill="#0099FF"/><rect x="8" y="4" width="4" height="4" fill="#0099FF"/><rect x="4" y="8" width="4" height="4" fill="#0099FF"/></svg>
+    EST. 2026 &mdash; MADE FOR INDIE GAME LOVERS
+  </div>
+  <h1>More playing,<br>more <span class="px">making</span>.</h1>
+  <p>把你最爱的独立游戏，变成桌面上摸得到的东西。<br>键帽、徽章、贴纸 &mdash; 每一件都和开发者正版联名。</p>
+  <div class="hero-actions">
+    <a href="#drops" class="btn btn-lg">逛逛新品
+      <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><rect x="1" y="6" width="8" height="2" fill="currentColor"/><rect x="7" y="2" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><rect x="11" y="6" width="2" height="2" fill="currentColor"/><rect x="9" y="8" width="2" height="2" fill="currentColor"/><rect x="7" y="10" width="2" height="2" fill="currentColor"/></svg>
+    </a>
+    <a href="#how" class="btn btn-lg btn-ghost">成为联名独游</a>
+  </div>
+  <div class="hero-deco" aria-hidden="true">
+    <span style="background:#EDFF00"></span><span></span><span style="background:#0099FF"></span><span></span>
+    <span></span><span style="background:#EDFF00"></span><span></span><span style="background:#F5F5F0"></span>
+    <span style="background:#0099FF"></span><span></span><span style="background:#EDFF00"></span><span></span>
+  </div>
+</div>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <div class="marquee-seq" id="mq-seq">
+      <span>限量首发 DROP 01</span>
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><rect x="4" width="4" height="4" fill="#0A0A0A"/><rect y="4" width="4" height="4" fill="#0A0A0A"/><rect x="8" y="4" width="4" height="4" fill="#0A0A0A"/><rect x="4" y="8" width="4" height="4" fill="#0A0A0A"/></svg>
+      <span>满 &yen;199 包邮</span>
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><rect x="4" width="4" height="4" fill="#0A0A0A"/><rect y="4" width="4" height="4" fill="#0A0A0A"/><rect x="8" y="4" width="4" height="4" fill="#0A0A0A"/><rect x="4" y="8" width="4" height="4" fill="#0A0A0A"/></svg>
+      <span>开发者正版授权</span>
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><rect x="4" width="4" height="4" fill="#0A0A0A"/><rect y="4" width="4" height="4" fill="#0A0A0A"/><rect x="8" y="4" width="4" height="4" fill="#0A0A0A"/><rect x="4" y="8" width="4" height="4" fill="#0A0A0A"/></svg>
+      <span>每售一件回馈作者</span>
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><rect x="4" width="4" height="4" fill="#0A0A0A"/><rect y="4" width="4" height="4" fill="#0A0A0A"/><rect x="8" y="4" width="4" height="4" fill="#0A0A0A"/><rect x="4" y="8" width="4" height="4" fill="#0A0A0A"/></svg>
+    </div>
+  </div>
+</div>
+
+<section id="drops">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="kicker">// DROP 01</div>
+        <h2 class="sec-title">本周补给</h2>
+      </div>
+      <a href="#" class="link-mono">查看全部 -&gt;</a>
+    </div>
+    <div class="grid-3">
+
+      <div class="card">
+        <div class="card-img">
+          <svg width="120" height="88" viewBox="0 0 30 22" fill="none"><rect x="4" y="4" width="22" height="12" fill="#2A2A2A"/><rect x="2" y="6" width="2" height="8" fill="#2A2A2A"/><rect x="26" y="6" width="2" height="8" fill="#2A2A2A"/><rect x="7" y="8" width="2" height="6" fill="#EDFF00"/><rect x="5" y="10" width="6" height="2" fill="#EDFF00"/><rect x="20" y="8" width="2" height="2" fill="#0099FF"/><rect x="23" y="10" width="2" height="2" fill="#F5F5F0"/><rect x="20" y="12" width="2" height="2" fill="#EDFF00"/><rect x="4" y="16" width="4" height="2" fill="#1D1D1D"/><rect x="22" y="16" width="4" height="2" fill="#1D1D1D"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="tags"><span class="tag b">KEYCAP</span><span class="tag">限量 300</span></div>
+          <div class="card-name">手柄键帽 &mdash; 复古机能款</div>
+          <div class="card-foot"><span class="price">&yen;69</span><a href="#" class="explore">explore -&gt;</a></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img blue">
+          <svg width="96" height="96" viewBox="0 0 24 24" fill="none"><rect x="10" y="2" width="4" height="4" fill="#0A0A0A"/><rect x="6" y="6" width="12" height="4" fill="#0A0A0A"/><rect x="2" y="10" width="20" height="4" fill="#0A0A0A"/><rect x="6" y="14" width="4" height="4" fill="#0A0A0A"/><rect x="14" y="14" width="4" height="4" fill="#0A0A0A"/><rect x="4" y="18" width="4" height="4" fill="#0A0A0A"/><rect x="16" y="18" width="4" height="4" fill="#0A0A0A"/><rect x="10" y="11" width="4" height="2" fill="#EDFF00"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="tags"><span class="tag y">PIN</span><span class="tag">联名款</span></div>
+          <div class="card-name">像素星徽章 &mdash; 硬珐琅</div>
+          <div class="card-foot"><span class="price">&yen;39</span><a href="#" class="explore">explore -&gt;</a></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-img">
+          <svg width="110" height="90" viewBox="0 0 28 22" fill="none"><rect x="3" y="3" width="22" height="16" fill="#2A2A2A"/><rect x="5" y="5" width="18" height="9" fill="#0A0A0A"/><rect x="8" y="7" width="2" height="2" fill="#EDFF00"/><rect x="10" y="9" width="2" height="2" fill="#EDFF00"/><rect x="12" y="7" width="2" height="2" fill="#EDFF00"/><rect x="16" y="8" width="4" height="2" fill="#0099FF"/><rect x="6" y="16" width="6" height="1" fill="#EDFF00"/></svg>
+        </div>
+        <div class="card-body">
+          <div class="tags"><span class="tag w">DESKMAT</span><span class="tag">900 x 400</span></div>
+          <div class="card-name">桌垫 &mdash; 终端界面主题</div>
+          <div class="card-foot"><span class="price">&yen;129</span><a href="#" class="explore">explore -&gt;</a></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="kicker">// HOW IT WORKS</div>
+        <h2 class="sec-title">从像素到 <span class="px">实物</span></h2>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step y">
+        <div class="num">01</div>
+        <h3>和开发者聊</h3>
+        <p>直接对接独立游戏开发者，拿到正版授权，不做山寨货。</p>
+      </div>
+      <div class="step b">
+        <div class="num">02</div>
+        <h3>小批量打样</h3>
+        <p>每个 Drop 限量生产，打样过程全程在社媒公开记录。</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>分成给开发者</h3>
+        <p>每卖出一件，[X]% 直接回到游戏作者手里，支持下一部作品。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta">
+  <h2>READY. SET. DROP.</h2>
+  <p>订阅补给情报，新 Drop 上线前 48 小时优先购。</p>
+  <form class="cta-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='DONE ✓';">
+    <input type="email" placeholder="your@email.com" required>
+    <button type="submit">SUBSCRIBE</button>
+  </form>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="big">PXL SUPPLY<span class="reg">&reg;</span></div>
+        <div class="slogan">all play &amp; no gray.</div>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <div class="h">SHOP</div>
+          <a href="#">全部周边</a><a href="#">键帽</a><a href="#">徽章</a>
+        </div>
+        <div class="foot-col">
+          <div class="h">STUDIO</div>
+          <a href="#">关于我们</a><a href="#">联名申请</a><a href="#">制作日志</a>
+        </div>
+        <div class="foot-col">
+          <div class="h">SUPPORT</div>
+          <a href="#">物流查询</a><a href="#">退换政策</a><a href="#">联系我们</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div>&copy; 2026 PXL SUPPLY. ALL RIGHTS RESERVED.</div>
+      <div>DESIGNED LOUD. BUILT SMALL.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // marquee 内容复制一份实现无缝循环
+  const track = document.querySelector('.marquee-track');
+  const seq = document.getElementById('mq-seq');
+  track.appendChild(seq.cloneNode(true));
+</script>
+
+</body>
+</html>
